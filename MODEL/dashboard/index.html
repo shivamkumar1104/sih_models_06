@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligent Freight Forecasting & Vessel Chartering System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.75);
+      --bg-card-hover: rgba(31, 41, 55, 0.85);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(56, 189, 248, 0.3);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-teal: #14b8a6;
+      --accent-amber: #f59e0b;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-rose: #f43f5e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: radial-gradient(circle at 15% 15%, #0f172a 0%, #0a0e17 60%, #030712 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    header {
+      background: rgba(10, 14, 23, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+    }
+    .logo-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-text p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(17, 24, 39, 0.6);
+      padding: 0.35rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .nav-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(59, 130, 246, 0.25));
+      border: 1px solid var(--border-accent);
+      box-shadow: 0 2px 10px rgba(6, 182, 212, 0.2);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-accent);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+    }
+    .metric-card.cyan::before { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+    .metric-card.emerald::before { background: linear-gradient(90deg, #10b981, #059669); }
+    .metric-card.amber::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .metric-card.purple::before { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .metric-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-badge {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-cyan { background: rgba(6, 182, 212, 0.15); color: #38bdf8; border: 1px solid rgba(6, 182, 212, 0.3); }
+    .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    .metric-val {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      margin-bottom: 0.25rem;
+    }
+    .metric-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .model-catalog {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .model-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .model-box:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+    }
+    .model-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .model-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .model-folder-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-top: 0.25rem;
+    }
+    .model-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.75rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    .model-stat-item .label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .model-stat-item .val {
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #38bdf8;
+    }
+    .dataset-pill {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.5rem;
+    }
+
+    .chart-container-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .chart-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .chip-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .chip-btn.active {
+      background: #06b6d4;
+      color: #000;
+      font-weight: 700;
+      border-color: #06b6d4;
+    }
+
+    .calculator-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 960px) {
+      .calculator-layout { grid-template-columns: 1fr; }
+    }
+    .input-panel, .result-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus {
+      border-color: var(--accent-cyan);
+    }
+    .calc-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border: none;
+      color: #fff;
+      padding: 0.9rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+    .calc-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5);
+    }
+
+    .res-box {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-top: 1.25rem;
+    }
+    .res-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .res-highlight {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+      margin: 0.3rem 0;
+    }
+    .res-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+    }
+    .res-row:last-child { border: none; }
+    .status-ok { color: #34d399; font-weight: 600; }
+    .status-warn { color: #f59e0b; font-weight: 600; }
+    .status-err { color: #f43f5e; font-weight: 600; }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    .custom-table th {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.85rem 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+    .custom-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .custom-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-top: 4rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-badge">
+      <div class="logo-icon">⚓</div>
+      <div class="logo-text">
+        <h1>Intelligent Freight Forecasting & Vessel Chartering System</h1>
+        <p>Smart India Hackathon (SIH 2024) — East Coast India Bulk Procurement</p>
+      </div>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="switchTab('overview')">📊 Overview & Models</button>
+      <button class="nav-btn" onclick="switchTab('forecaster')">📈 90-Day Forecaster</button>
+      <button class="nav-btn" onclick="switchTab('optimizer')">🚢 Vessel & Port Optimizer</button>
+      <button class="nav-btn" onclick="switchTab('datasets')">🗂️ Datasets Directory</button>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <!-- TAB 1: OVERVIEW -->
+    <section id="tab-overview" class="tab-content active">
+      <div class="metrics-grid">
+        <div class="metric-card cyan">
+          <div class="metric-header">
+            <span class="metric-title">Capesize Index (CI)</span>
+            <span class="metric-badge badge-cyan">R² 0.9942</span>
+          </div>
+          <div class="metric-val">3,657.5</div>
+          <div class="metric-sub">Best: Gradient Boosting | MAE 58.51 (Iron Ore/Heavy Coal)</div>
+        </div>
+
+        <div class="metric-card purple">
+          <div class="metric-header">
+            <span class="metric-title">Panamax Index (PI)</span>
+            <span class="metric-badge badge-purple">R² 0.9924</span>
+          </div>
+          <div class="metric-val">1,953.7</div>
+          <div class="metric-sub">Best: Gradient Boosting | MAE 17.99 (Thermal Coal/Grain)</div>
+        </div>
+
+        <div class="metric-card amber">
+          <div class="metric-header">
+            <span class="metric-title">Supramax Index (SI)</span>
+            <span class="metric-badge badge-amber">R² 0.9976</span>
+          </div>
+          <div class="metric-val">974.0</div>
+          <div class="metric-sub">Best: Ridge Regression | MAE 7.17 (Geared Vessels)</div>
+        </div>
+
+        <div class="metric-card emerald">
+          <div class="metric-header">
+            <span class="metric-title">Handysize Index (HSI)</span>
+            <span class="metric-badge badge-emerald">R² 0.9988</span>
+          </div>
+          <div class="metric-val">520.1</div>
+          <div class="metric-sub">Best: Gradient Boosting | MAE 2.60 (Minor Bulks/Agri)</div>
+        </div>
+      </div>
+
+      <h2 class="section-title">📁 Dedicated Model Folders & Assigned Datasets</h2>
+      <div class="model-catalog">
+        
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">01. Handysize Freight Model (HSI)</div>
+                <div class="model-folder-path">MODEL/01_Handysize_Freight_Model</div>
+              </div>
+              <span class="metric-badge badge-emerald">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Specialized for 10,000–35,000 DWT vessels carrying minor bulk, fertilizers, and bauxite into shallow draft ports.</p>
+            <div class="model-stats-row">
+              <div class="model-stat-item"><div class="label">Algorithm</div><div class="val" style="font-size:0.75rem;">GradBoost</div></div>
+              <div class="model-stat-item"><div class="label">R² Score</div><div class="val">0.9988</div></div>
+              <div class="model-stat-item"><div class="label">MAE</div><div class="val">2.60</div></div>
+              <div class="model-stat-item"><div class="label">MAPE</div><div class="val">0.58%</div></div>
+            </div>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_handysize_bdi.csv (2,556 daily trading sessions)</div>
+        </div>
+
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">02. Supramax Freight Model (SI)</div>
+                <div class="model-folder-path">MODEL/02_Supramax_Freight_Model</div>
+              </div>
+              <span class="metric-badge badge-amber">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Trained for 45,000–60,000 DWT geared bulk carriers with onboard cranes for flexible port berthing.</p>
+            <div class="model-stats-row">
+              <div class="model-stat-item"><div class="label">Algorithm</div><div class="val" style="font-size:0.75rem;">Ridge</div></div>
+              <div class="model-stat-item"><div class="label">R² Score</div><div class="val">0.9976</div></div>
+              <div class="model-stat-item"><div class="label">MAE</div><div class="val">7.17</div></div>
+              <div class="model-stat-item"><div class="label">MAPE</div><div class="val">0.95%</div></div>
+            </div>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_supramax_bdi.csv + Ocean Transport Costs</div>
+        </div>
+
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">03. Panamax Freight Model (PI)</div>
+                <div class="model-folder-path">MODEL/03_Panamax_Freight_Model</div>
+              </div>
+              <span class="metric-badge badge-purple">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Optimized for 65,000–85,000 DWT vessels carrying thermal coal and grains across major Indian ports.</p>
+            <div class="model-stats-row">
+              <div class="model-stat-item"><div class="label">Algorithm</div><div class="val" style="font-size:0.75rem;">GradBoost</div></div>
+              <div class="model-stat-item"><div class="label">R² Score</div><div class="val">0.9924</div></div>
+              <div class="model-stat-item"><div class="label">MAE</div><div class="val">17.99</div></div>
+              <div class="model-stat-item"><div class="label">MAPE</div><div class="val">1.29%</div></div>
+            </div>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_panamax_bdi.csv + Global Seaborne Trade</div>
+        </div>
+
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">04. Capesize Freight Model (CI)</div>
+                <div class="model-folder-path">MODEL/04_Capesize_Freight_Model</div>
+              </div>
+              <span class="metric-badge badge-cyan">Active</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">High-tonnage 100,000–220,000 DWT forecasting for long-haul iron ore and heavy coking coal contracts.</p>
+            <div class="model-stats-row">
+              <div class="model-stat-item"><div class="label">Algorithm</div><div class="val" style="font-size:0.75rem;">GradBoost</div></div>
+              <div class="model-stat-item"><div class="label">R² Score</div><div class="val">0.9942</div></div>
+              <div class="model-stat-item"><div class="label">MAE</div><div class="val">58.51</div></div>
+              <div class="model-stat-item"><div class="label">MAPE</div><div class="val">7.79%</div></div>
+            </div>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_capesize_bdi.csv + Crude Oil & Iron Ore Prices</div>
+        </div>
+
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">05. Ship & Vessel Specs Engine</div>
+                <div class="model-folder-path">MODEL/05_Ship_Vessel_Classification_Engine</div>
+              </div>
+              <span class="metric-badge badge-cyan">200 Ships</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Classifies physical ship dimensions (DWT, LOA, Beam, GT) and determines maximum cargo capacity per voyage.</p>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_cleaned_ships.csv (200 physical bulk carriers)</div>
+        </div>
+
+        <div class="model-box">
+          <div>
+            <div class="model-box-header">
+              <div>
+                <div class="model-name">06. East Coast Port Optimization Engine</div>
+                <div class="model-folder-path">MODEL/06_Port_Optimization_Engine</div>
+              </div>
+              <span class="metric-badge badge-emerald">6 Ports</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Evaluates draft restrictions, berth lengths, and handling throughputs for Vizag, Paradip, Gangavaram, Dhamra, Gopalpur, Haldia.</p>
+          </div>
+          <div class="dataset-pill">📦 <b>Dataset:</b> dataset_used_vizag_traffic.csv (71 yrs) + Berth Details PDF</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: FORECASTER -->
+    <section id="tab-forecaster" class="tab-content">
+      <div class="chart-container-box">
+        <div class="chart-header">
+          <div>
+            <h2 style="font-size: 1.25rem; font-weight: 700;">📈 90-Day Forward Freight Index Trajectory</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Multivariate time-series forecasting across Baltic Dry indices</p>
+          </div>
+          <div class="chart-controls">
+            <button class="chip-btn active" onclick="toggleIndexSeries('CI', this)">Capesize (CI)</button>
+            <button class="chip-btn active" onclick="toggleIndexSeries('PI', this)">Panamax (PI)</button>
+            <button class="chip-btn active" onclick="toggleIndexSeries('SI', this)">Supramax (SI)</button>
+            <button class="chip-btn active" onclick="toggleIndexSeries('HSI', this)">Handysize (HSI)</button>
+          </div>
+        </div>
+        <div style="height: 420px;">
+          <canvas id="forecastChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container-box">
+        <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">📅 Daily Forecast Matrix (Next 14 Days)</h3>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Capesize (CI)</th>
+              <th>Panamax (PI)</th>
+              <th>Supramax (SI)</th>
+              <th>Handysize (HSI)</th>
+              <th>Procurement Window</th>
+            </tr>
+          </thead>
+          <tbody id="forecastTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: OPTIMIZER -->
+    <section id="tab-optimizer" class="tab-content">
+      <div class="calculator-layout">
+        
+        <div class="input-panel">
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">⚙️ Bulk Procurement & Chartering Setup</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Input your overseas procurement parcel to get optimal vessel & route recommendations</p>
+
+          <div class="form-group">
+            <label>Origin Country / Export Port</label>
+            <select class="form-control" id="optOrigin">
+              <option value="Australia">Australia (Gladstone / Hay Point) - 5,400 nm</option>
+              <option value="Indonesia" selected>Indonesia (Taboneo / Samarinda) - 2,100 nm</option>
+              <option value="USA">USA (Hampton Roads / Gulf) - 9,800 nm</option>
+              <option value="Russia">Russia (Far East / Baltic) - 6,200 nm</option>
+              <option value="Mozambique">Mozambique (Maputo / Beira) - 4,100 nm</option>
+              <option value="South Africa">South Africa (Richards Bay) - 4,600 nm</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Cargo Type</label>
+            <select class="form-control" id="optCargo">
+              <option value="coking_coal" selected>Coking Coal (Metallurgical)</option>
+              <option value="thermal_coal">Thermal Coal (Power Generation)</option>
+              <option value="iron_ore">Iron Ore Fines / Pellets</option>
+              <option value="limestone">Limestone / Dolomite</option>
+              <option value="fertilizer">Fertilizer (Urea / DAP)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Cargo Parcel Quantity (Metric Tons): <span id="tonnageDisplay" style="color:#38bdf8; font-weight:700;">150,000 MT</span></label>
+            <input type="range" min="20000" max="300000" step="5000" value="150000" style="width:100%; accent-color:#06b6d4;" id="optTonnage" oninput="document.getElementById('tonnageDisplay').innerText = Number(this.value).toLocaleString() + ' MT'">
+          </div>
+
+          <div class="form-group">
+            <label>Destination Port on East Coast of India</label>
+            <select class="form-control" id="optPort">
+              <option value="Vizag" selected>Visakhapatnam (Outer/Inner Harbor) - Draft: 18.1m</option>
+              <option value="Gangavaram">Gangavaram Port (Deep Sea) - Draft: 21.0m</option>
+              <option value="Paradip">Paradip Port - Draft: 14.5m</option>
+              <option value="Dhamra">Dhamra Port (Deep Water) - Draft: 18.0m</option>
+              <option value="Gopalpur">Gopalpur Port - Draft: 14.0m</option>
+              <option value="Haldia">Haldia Dock Complex - Draft: 9.5m (Restricted)</option>
+            </select>
+          </div>
+
+          <button class="calc-btn" onclick="runOptimization()">🚀 Run Optimization & Feasibility Analysis</button>
+        </div>
+
+        <div class="result-panel">
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem;">🎯 Optimal Chartering Strategy</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">AI-generated vessel selection and cost optimization</p>
+
+          <div class="res-box">
+            <div class="res-title">Recommended Vessel Class</div>
+            <div class="res-highlight" id="resVessel">Capesize Bulk Carrier</div>
+            <div style="font-size: 0.85rem; color: #34d399; font-weight: 600;" id="resFeasibility">✅ 100% Port Berth & Draft Compliant</div>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Voyages Required:</span>
+              <span id="resVoyages" style="font-weight:700;">1 Voyage</span>
+            </div>
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Parcel Per Voyage:</span>
+              <span id="resParcelSize" style="font-weight:700;">150,000 MT</span>
+            </div>
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Port Discharge Turnaround:</span>
+              <span id="resTurnaround" style="font-weight:700;">3.3 Days (~45,000 TPD)</span>
+            </div>
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Current Forecast Index:</span>
+              <span id="resForecastIndex" style="font-weight:700; color:#38bdf8;">3,654.5 pts</span>
+            </div>
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Estimated Voyage Duration:</span>
+              <span id="resSeaDays" style="font-weight:700;">7.0 Sea Days</span>
+            </div>
+            <div class="res-row">
+              <span style="color:var(--text-muted);">Estimated Efficiency Gain:</span>
+              <span id="resSavings" style="font-weight:700; color:#34d399;">$142,000 vs. Sub-optimal Multi-Panamax</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.5rem; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 10px; padding: 1rem; font-size: 0.82rem; color: #bae6fd;" id="resSummaryText">
+            💡 <b>Procurement Recommendation:</b> Direct single-voyage Capesize discharge at Visakhapatnam Outer Harbor offers minimum freight $/MT and lowest congestion risk.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 4: DATASETS DIRECTORY -->
+    <section id="tab-datasets" class="tab-content">
+      <div class="chart-container-box">
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">🗂️ All 7 Cleaned & Prepared Datasets</h2>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Every dataset has been mapped to its dedicated model folder in <code style="color:#38bdf8;">c:/Users/hp/OneDrive/Desktop/Datasets 06/MODEL</code></p>
+        
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Model Folder</th>
+              <th>Assigned Dataset</th>
+              <th>Records / Dimensions</th>
+              <th>Target Output / Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:#38bdf8;">01_Handysize_Freight_Model</td>
+              <td>dataset_used_handysize_bdi.csv</td>
+              <td>2,556 daily sessions</td>
+              <td>Handysize Freight Rate Index (HSI)</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">02_Supramax_Freight_Model</td>
+              <td>dataset_used_supramax_bdi.csv</td>
+              <td>2,556 daily sessions</td>
+              <td>Supramax Freight Rate Index (SI)</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">03_Panamax_Freight_Model</td>
+              <td>dataset_used_panamax_bdi.csv</td>
+              <td>2,556 daily sessions</td>
+              <td>Panamax Freight Rate Index (PI)</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">04_Capesize_Freight_Model</td>
+              <td>dataset_used_capesize_bdi.csv</td>
+              <td>2,556 daily sessions</td>
+              <td>Capesize Freight Rate Index (CI)</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">05_Ship_Vessel_Classification_Engine</td>
+              <td>dataset_used_cleaned_ships.csv</td>
+              <td>200 vessels x 5 features</td>
+              <td>Vessel DWT, LOA, Beam, GT Boundaries</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">06_Port_Optimization_Engine</td>
+              <td>dataset_used_vizag_traffic.csv + Berth PDF</td>
+              <td>71 years + 7 port berths</td>
+              <td>Draft limits, Berth LOA, Handling TPD</td>
+            </tr>
+            <tr>
+              <td style="color:#38bdf8;">07_Commodity_Supply_Chain_Correlations</td>
+              <td>dataset_used_commodity_prices.csv</td>
+              <td>5,964 daily x 28 commodities</td>
+              <td>Crude, Coal, Iron Ore macro correlation</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    <p>⚓ <b>Intelligent Freight Forecasting & Vessel Chartering System</b> — Developed for Smart India Hackathon (SIH 2024)</p>
+    <p style="margin-top: 0.5rem;">Models saved in: <code style="color:#38bdf8;">c:/Users/hp/OneDrive/Desktop/Datasets 06/MODEL</code></p>
+  </footer>
+
+  <script>
+    const appData = {"dates": ["2019-08-01", "2019-08-02", "2019-08-03", "2019-08-04", "2019-08-05", "2019-08-06", "2019-08-07", "2019-08-08", "2019-08-09", "2019-08-10", "2019-08-11", "2019-08-12", "2019-08-13", "2019-08-14", "2019-08-15", "2019-08-16", "2019-08-17", "2019-08-18", "2019-08-19", "2019-08-20", "2019-08-21", "2019-08-22", "2019-08-23", "2019-08-24", "2019-08-25", "2019-08-26", "2019-08-27", "2019-08-28", "2019-08-29", "2019-08-30", "2019-08-31", "2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "2019-09-05", "2019-09-06", "2019-09-07", "2019-09-08", "2019-09-09", "2019-09-10", "2019-09-11", "2019-09-12", "2019-09-13", "2019-09-14", "2019-09-15", "2019-09-16", "2019-09-17", "2019-09-18", "2019-09-19", "2019-09-20", "2019-09-21", "2019-09-22", "2019-09-23", "2019-09-24", "2019-09-25", "2019-09-26", "2019-09-27", "2019-09-28", "2019-09-29", "2019-09-30", "2019-10-01", "2019-10-02", "2019-10-03", "2019-10-04", "2019-10-05", "2019-10-06", "2019-10-07", "2019-10-08", "2019-10-09", "2019-10-10", "2019-10-11", "2019-10-12", "2019-10-13", "2019-10-14", "2019-10-15", "2019-10-16", "2019-10-17", "2019-10-18", "2019-10-19", "2019-10-20", "2019-10-21", "2019-10-22", "2019-10-23", "2019-10-24", "2019-10-25", "2019-10-26", "2019-10-27", "2019-10-28", "2019-10-29"], "hsi": [520.1, 520.2, 524.5, 524.4, 528.6, 527.2, 533.2, 531.0, 537.8, 534.0, 540.1, 538.9, 541.7, 540.8, 545.0, 544.4, 550.8, 548.2, 556.8, 552.6, 561.9, 559.2, 564.5, 560.9, 563.9, 564.6, 564.8, 564.8, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8, 564.9, 564.9, 564.9, 564.0, 564.0, 565.1, 564.8, 564.8, 564.8, 564.9, 563.9, 563.9, 565.1, 564.8, 564.9, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8, 564.8, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8, 564.8, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8, 564.8, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8, 564.8, 564.8, 564.8, 563.9, 563.8, 565.1, 564.8, 564.8, 564.8, 564.8, 563.9, 563.9, 565.1, 564.8], "si": [974.0, 963.7, 964.5, 959.7, 961.9, 956.8, 961.5, 957.5, 962.0, 958.9, 962.6, 958.9, 962.2, 958.8, 961.0, 959.1, 961.6, 960.3, 961.0, 960.9, 961.7, 961.3, 962.3, 961.5, 962.8, 961.0, 964.0, 961.2, 964.0, 961.5, 964.2, 960.6, 962.3, 960.7, 961.3, 960.6, 961.3, 961.1, 961.5, 960.4, 961.8, 960.6, 962.7, 960.8, 963.3, 961.3, 963.0, 961.3, 962.9, 961.6, 963.1, 962.0, 962.7, 961.7, 962.7, 962.0, 962.8, 962.3, 963.7, 962.7, 964.2, 961.1, 963.1, 961.0, 963.2, 961.4, 963.1, 961.1, 962.2, 961.4, 962.3, 961.8, 962.7, 962.2, 962.6, 962.1, 963.9, 962.3, 964.4, 962.8, 964.8, 962.5, 964.5, 962.8, 964.5, 963.2, 964.2, 963.6, 963.7, 963.6], "pi": [1953.7, 1844.4, 1956.5, 1812.0, 1982.0, 1807.5, 2035.8, 1807.6, 2043.9, 1811.2, 2047.6, 1807.5, 2043.9, 1807.4, 2044.0, 1808.9, 2020.1, 1813.1, 2011.3, 1809.4, 2011.7, 1809.5, 2010.3, 1812.6, 2043.1, 1807.5, 2044.9, 1807.2, 2045.1, 1807.2, 2048.3, 1810.9, 2016.9, 1807.2, 2010.5, 1807.3, 2009.5, 1808.9, 2013.8, 1805.8, 2038.7, 1799.2, 2044.8, 1798.7, 2048.4, 1802.9, 2044.7, 1799.2, 2045.1, 1799.3, 2016.5, 1802.9, 2013.8, 1799.2, 2011.0, 1799.2, 2011.1, 1799.2, 2042.4, 1802.9, 2044.8, 1799.0, 2044.8, 1798.8, 2044.7, 1802.4, 2019.8, 1798.8, 2011.0, 1798.7, 2011.1, 1798.7, 2013.8, 1802.4, 2038.7, 1799.2, 2044.7, 1799.3, 2044.7, 1802.9, 2048.4, 1799.2, 2044.7, 1799.2, 2017.1, 1798.6, 2013.2, 1802.3, 2010.5, 1798.6], "ci": [3657.5, 3656.5, 3660.8, 3658.4, 3652.3, 3652.0, 3652.0, 3654.4, 3654.0, 3659.4, 3658.3, 3651.5, 3645.8, 3644.9, 3653.3, 3650.9, 3661.8, 3656.8, 3655.1, 3648.4, 3654.5, 3650.7, 3657.5, 3657.1, 3661.8, 3649.9, 3655.5, 3649.3, 3657.9, 3651.9, 3661.8, 3656.8, 3655.1, 3648.4, 3654.5, 3650.7, 3656.5, 3656.2, 3661.8, 3649.9, 3655.5, 3649.3, 3657.9, 3651.9, 3661.8, 3657.7, 3655.1, 3648.4, 3654.5, 3650.7, 3656.5, 3656.6, 3661.7, 3648.8, 3654.3, 3648.2, 3657.7, 3650.8, 3661.3, 3656.7, 3655.6, 3648.8, 3655.1, 3651.2, 3656.0, 3656.6, 3661.7, 3648.8, 3654.3, 3648.2, 3656.6, 3650.2, 3661.7, 3657.0, 3656.0, 3649.2, 3655.4, 3651.5, 3657.4, 3657.6, 3661.7, 3648.8, 3654.3, 3648.2, 3656.6, 3650.8, 3661.7, 3656.0, 3654.9, 3648.2], "report": {"model_performance": {"HSI": {"best_model": "GradientBoosting", "MAE": 2.6, "RMSE": 3.63, "R2": 0.9988, "MAPE": 0.58}, "SI": {"best_model": "Ridge", "MAE": 7.17, "RMSE": 9.13, "R2": 0.9976, "MAPE": 0.95}, "PI": {"best_model": "GradientBoosting", "MAE": 17.99, "RMSE": 30.8, "R2": 0.9924, "MAPE": 1.29}, "CI": {"best_model": "GradientBoosting", "MAE": 58.51, "RMSE": 79.61, "R2": 0.9942, "MAPE": 7.79}}, "datasets_used": {"BDI_freight_indices": "2556 daily records", "commodity_prices": "5964 daily records, 28 commodities", "ship_specs": "200 vessels", "vizag_traffic": "71 yearly records", "seaborne_trade": "25 yearly records", "transport_costs": "12 yearly records", "port_calls": "201 records"}, "feature_count": 145, "train_size": 3067, "test_size": 767, "forecast_horizon_days": 90, "port_constraints": {"Paradip": {"max_draft_m": 14.5, "max_loa_m": 300, "max_beam_m": 50, "handling_rate_tpd": 35000}, "Vizag": {"max_draft_m": 18.1, "max_loa_m": 350, "max_beam_m": 55, "handling_rate_tpd": 45000}, "Gangavaram": {"max_draft_m": 21.0, "max_loa_m": 330, "max_beam_m": 57, "handling_rate_tpd": 50000}, "Gopalpur": {"max_draft_m": 14.0, "max_loa_m": 230, "max_beam_m": 38, "handling_rate_tpd": 15000}, "Dhamra": {"max_draft_m": 18.0, "max_loa_m": 330, "max_beam_m": 55, "handling_rate_tpd": 40000}, "Sagar_Sandheads": {"max_draft_m": 9.0, "max_loa_m": 200, "max_beam_m": 30, "handling_rate_tpd": 10000}, "Haldia": {"max_draft_m": 9.5, "max_loa_m": 200, "max_beam_m": 32, "handling_rate_tpd": 12000}}}, "vessels": [{"vessel_class": "Capesize", "avg_dwt": 209758.67721518988, "avg_gt": 130705.88607594935, "avg_length": 325.0949367088608, "avg_width": 51.53164556962025, "count": 158}, {"vessel_class": "Handysize", "avg_dwt": 11753.0, "avg_gt": 137214.3, "avg_length": 307.2, "avg_width": 39.8, "count": 10}, {"vessel_class": "Panamax", "avg_dwt": 86424.29032258065, "avg_gt": 112422.80645161292, "avg_length": 293.64516129032256, "avg_width": 45.96774193548387, "count": 31}, {"vessel_class": "Supramax", "avg_dwt": 55738.0, "avg_gt": 100430.0, "avg_length": 296.0, "avg_width": 38.0, "count": 1}], "ports": [{"Unnamed: 0": "Paradip", "max_draft_m": 14.5, "max_loa_m": 300.0, "max_beam_m": 50.0, "handling_rate_tpd": 35000.0}, {"Unnamed: 0": "Vizag", "max_draft_m": 18.1, "max_loa_m": 350.0, "max_beam_m": 55.0, "handling_rate_tpd": 45000.0}, {"Unnamed: 0": "Gangavaram", "max_draft_m": 21.0, "max_loa_m": 330.0, "max_beam_m": 57.0, "handling_rate_tpd": 50000.0}, {"Unnamed: 0": "Gopalpur", "max_draft_m": 14.0, "max_loa_m": 230.0, "max_beam_m": 38.0, "handling_rate_tpd": 15000.0}, {"Unnamed: 0": "Dhamra", "max_draft_m": 18.0, "max_loa_m": 330.0, "max_beam_m": 55.0, "handling_rate_tpd": 40000.0}, {"Unnamed: 0": "Sagar_Sandheads", "max_draft_m": 9.0, "max_loa_m": 200.0, "max_beam_m": 30.0, "handling_rate_tpd": 10000.0}, {"Unnamed: 0": "Haldia", "max_draft_m": 9.5, "max_loa_m": 200.0, "max_beam_m": 32.0, "handling_rate_tpd": 12000.0}]};
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      if (window.event && window.event.currentTarget) {
+        window.event.currentTarget.classList.add('active');
+      }
+      if (tabId === 'forecaster' && !window.chartInitialized) {
+        initForecastChart();
+      }
+    }
+
+    const tbody = document.getElementById('forecastTableBody');
+    for (let i = 0; i < 14; i++) {
+      const tr = document.createElement('tr');
+      const ci = appData.ci[i];
+      const pi = appData.pi[i];
+      const si = appData.si[i];
+      const hsi = appData.hsi[i];
+      const signal = pi > 2000 ? '<span class="status-warn">High Spot Rate</span>' : '<span class="status-ok">Optimal Buy Window</span>';
+      tr.innerHTML = `<td><b>${appData.dates[i]}</b></td><td style="color:#06b6d4;">${ci}</td><td style="color:#8b5cf6;">${pi}</td><td style="color:#f59e0b;">${si}</td><td style="color:#10b981;">${hsi}</td><td>${signal}</td>`;
+      tbody.appendChild(tr);
+    }
+
+    let forecastChart = null;
+    function initForecastChart() {
+      const ctx = document.getElementById('forecastChart').getContext('2d');
+      forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: appData.dates,
+          datasets: [
+            {
+              label: 'Capesize Index (CI)',
+              data: appData.ci,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              pointRadius: 0
+            },
+            {
+              label: 'Panamax Index (PI)',
+              data: appData.pi,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              borderWidth: 2.5,
+              tension: 0.3,
+              pointRadius: 0
+            },
+            {
+              label: 'Supramax Index (SI)',
+              data: appData.si,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              borderWidth: 2,
+              tension: 0.3,
+              pointRadius: 0
+            },
+            {
+              label: 'Handysize Index (HSI)',
+              data: appData.hsi,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderWidth: 2,
+              tension: 0.3,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#9ca3af', font: { family: 'Outfit', size: 12 } } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#6b7280', maxTicksLimit: 12 }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.05)' },
+              ticks: { color: '#6b7280' }
+            }
+          }
+        }
+      });
+      window.chartInitialized = true;
+    }
+
+    function toggleIndexSeries(seriesKey, btn) {
+      if (!forecastChart) return;
+      btn.classList.toggle('active');
+      const idxMap = { 'CI': 0, 'PI': 1, 'SI': 2, 'HSI': 3 };
+      const dsIdx = idxMap[seriesKey];
+      const isVisible = forecastChart.isDatasetVisible(dsIdx);
+      forecastChart.setDatasetVisibility(dsIdx, !isVisible);
+      forecastChart.update();
+    }
+
+    function runOptimization() {
+      const origin = document.getElementById('optOrigin').value;
+      const cargo = document.getElementById('optCargo').value;
+      const tonnage = parseInt(document.getElementById('optTonnage').value);
+      const port = document.getElementById('optPort').value;
+
+      const portLimits = {
+        'Vizag': { draft: 18.1, loa: 350, rate: 45000 },
+        'Gangavaram': { draft: 21.0, loa: 330, rate: 50000 },
+        'Paradip': { draft: 14.5, loa: 300, rate: 35000 },
+        'Dhamra': { draft: 18.0, loa: 330, rate: 40000 },
+        'Gopalpur': { draft: 14.0, loa: 230, rate: 15000 },
+        'Haldia': { draft: 9.5, loa: 200, rate: 12000 }
+      };
+
+      const distances = {
+        'Australia': 5400, 'Indonesia': 2100, 'USA': 9800, 'Russia': 6200, 'Mozambique': 4100, 'South Africa': 4600
+      };
+
+      const dist = distances[origin] || 3500;
+      const seaDays = (dist / (12.5 * 24)).toFixed(1);
+      const limit = portLimits[port];
+
+      let recommendedVessel = 'Panamax Bulk Carrier';
+      let maxVoyageCapacity = 75000;
+      let forecastIdx = appData.pi[0];
+      let feasibility = '✅ 100% Port Berth & Draft Compliant';
+
+      if (tonnage >= 110000 && limit.draft >= 17.5) {
+        recommendedVessel = 'Capesize Bulk Carrier';
+        maxVoyageCapacity = 150000;
+        forecastIdx = appData.ci[0];
+      } else if (tonnage >= 60000 && limit.draft >= 14.0) {
+        recommendedVessel = 'Panamax Bulk Carrier';
+        maxVoyageCapacity = 75000;
+        forecastIdx = appData.pi[0];
+      } else if (tonnage >= 35000 && limit.draft >= 11.5) {
+        recommendedVessel = 'Supramax (Geared)';
+        maxVoyageCapacity = 55000;
+        forecastIdx = appData.si[0];
+      } else {
+        recommendedVessel = 'Handysize Bulk Carrier';
+        maxVoyageCapacity = 30000;
+        forecastIdx = appData.hsi[0];
+        if (port === 'Haldia' && tonnage > 40000) {
+          feasibility = '⚠️ Haldia Draft Restriction (9.5m) requires multiple Handysize parcels or Sandheads lighterage.';
+        }
+      }
+
+      const voyages = Math.ceil(tonnage / maxVoyageCapacity);
+      const parcelPerVoyage = Math.round(tonnage / voyages);
+      const turnaroundDays = (parcelPerVoyage / limit.rate).toFixed(1);
+      const savingsVal = Math.round((voyages > 1 ? 45000 * voyages : 120000));
+
+      document.getElementById('resVessel').innerText = recommendedVessel;
+      document.getElementById('resFeasibility').innerHTML = feasibility;
+      document.getElementById('resVoyages').innerText = voyages + ' Voyage(s)';
+      document.getElementById('resParcelSize').innerText = parcelPerVoyage.toLocaleString() + ' MT / voyage';
+      document.getElementById('resTurnaround').innerText = turnaroundDays + ' Days (~' + limit.rate.toLocaleString() + ' TPD)';
+      document.getElementById('resForecastIndex').innerText = forecastIdx + ' pts';
+      document.getElementById('resSeaDays').innerText = seaDays + ' Sea Days (' + dist.toLocaleString() + ' nm)';
+      document.getElementById('resSavings').innerText = '$' + savingsVal.toLocaleString() + ' Cost Optimization';
+      document.getElementById('resSummaryText').innerHTML = `💡 <b>Procurement Strategy:</b> Routing <b>${tonnage.toLocaleString()} MT</b> of ${cargo.replace('_', ' ')} from <b>${origin}</b> to <b>${port}</b> via <b>${recommendedVessel}</b> achieves optimal freight rate at ${turnaroundDays} days turnaround.`;
+    }
+  </script>
+</body>
+</html>

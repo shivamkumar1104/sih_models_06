@@ -1,0 +1,89 @@
+{
+  "model_performance": {
+    "HSI": {
+      "best_model": "GradientBoosting",
+      "MAE": 2.6,
+      "RMSE": 3.63,
+      "R2": 0.9988,
+      "MAPE": 0.58
+    },
+    "SI": {
+      "best_model": "Ridge",
+      "MAE": 7.17,
+      "RMSE": 9.13,
+      "R2": 0.9976,
+      "MAPE": 0.95
+    },
+    "PI": {
+      "best_model": "GradientBoosting",
+      "MAE": 17.99,
+      "RMSE": 30.8,
+      "R2": 0.9924,
+      "MAPE": 1.29
+    },
+    "CI": {
+      "best_model": "GradientBoosting",
+      "MAE": 58.51,
+      "RMSE": 79.61,
+      "R2": 0.9942,
+      "MAPE": 7.79
+    }
+  },
+  "datasets_used": {
+    "BDI_freight_indices": "2556 daily records",
+    "commodity_prices": "5964 daily records, 28 commodities",
+    "ship_specs": "200 vessels",
+    "vizag_traffic": "71 yearly records",
+    "seaborne_trade": "25 yearly records",
+    "transport_costs": "12 yearly records",
+    "port_calls": "201 records"
+  },
+  "feature_count": 145,
+  "train_size": 3067,
+  "test_size": 767,
+  "forecast_horizon_days": 90,
+  "port_constraints": {
+    "Paradip": {
+      "max_draft_m": 14.5,
+      "max_loa_m": 300,
+      "max_beam_m": 50,
+      "handling_rate_tpd": 35000
+    },
+    "Vizag": {
+      "max_draft_m": 18.1,
+      "max_loa_m": 350,
+      "max_beam_m": 55,
+      "handling_rate_tpd": 45000
+    },
+    "Gangavaram": {
+      "max_draft_m": 21.0,
+      "max_loa_m": 330,
+      "max_beam_m": 57,
+      "handling_rate_tpd": 50000
+    },
+    "Gopalpur": {
+      "max_draft_m": 14.0,
+      "max_loa_m": 230,
+      "max_beam_m": 38,
+      "handling_rate_tpd": 15000
+    },
+    "Dhamra": {
+      "max_draft_m": 18.0,
+      "max_loa_m": 330,
+      "max_beam_m": 55,
+      "handling_rate_tpd": 40000
+    },
+    "Sagar_Sandheads": {
+      "max_draft_m": 9.0,
+      "max_loa_m": 200,
+      "max_beam_m": 30,
+      "handling_rate_tpd": 10000
+    },
+    "Haldia": {
+      "max_draft_m": 9.5,
+      "max_loa_m": 200,
+      "max_beam_m": 32,
+      "handling_rate_tpd": 12000
+    }
+  }
+}
