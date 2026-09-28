@@ -17,3 +17,9 @@ venv/
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Large files not needed for deployment
+ngrok.zip
+MODEL/ngrok.zip
+MODEL_API_PACKAGE.zip
+*.zip

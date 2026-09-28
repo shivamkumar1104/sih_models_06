@@ -121,8 +121,11 @@ if os.path.exists(forecast_path):
 
 # 7. Model Performance Report
 report_path = os.path.join(BASE_DIR, 'model_report.json')
-with open(report_path, 'r') as f:
-    model_report = json.load(f) if os.path.exists(report_path) else {}
+if os.path.exists(report_path):
+    with open(report_path, 'r') as f:
+        model_report = json.load(f)
+else:
+    model_report = {}
 
 # -----------------------------------------------------------------------------
 # 3. FASTAPI SCHEMAS
@@ -481,10 +484,12 @@ def get_free_port(preferred=8000):
 
 if __name__ == "__main__":
     import uvicorn
-    port = get_free_port(8000)
+    # Render injects PORT env var; fall back to 8000 for local dev
+    port = int(os.environ.get("PORT", get_free_port(8000)))
+    host = "0.0.0.0"  # Must bind to 0.0.0.0 for Render
     print(f"\n========================================================")
-    print(f"FastAPI ML Engine started on http://127.0.0.1:{port}")
-    print(f"Swagger API Docs: http://127.0.0.1:{port}/docs")
-    print(f"Dynamic UI: http://127.0.0.1:{port}/")
+    print(f"FastAPI ML Engine started on http://{host}:{port}")
+    print(f"Swagger API Docs: http://{host}:{port}/docs")
+    print(f"Dynamic UI: http://{host}:{port}/")
     print(f"========================================================\n")
-    uvicorn.run(app, host="127.0.0.1", port=port)
+    uvicorn.run(app, host=host, port=port)
